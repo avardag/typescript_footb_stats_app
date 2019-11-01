@@ -1,14 +1,13 @@
 import fs from 'fs';
-import { dateStringToDate } from './utils';
-import { MatchResult } from './MatchResult';
 
-//definig Tuple
-type MatchData = [ Date, string, string, number, number, MatchResult, string ]
-
-export class CSVFileReader{
-  data: MatchData[] = [];
+export abstract class CSVFileReader<T>{
+  data: T[] = [];
 
   constructor(public filename: string){}
+  //map rows to return matchdata kind of rows
+  //abstract class. Will be implemented by child class
+  abstract mapRow(row: string[]): T;
+  
   read(): void{
     //parse csv file
   this.data = fs.readFileSync(this.filename, {
@@ -18,17 +17,14 @@ export class CSVFileReader{
     .map((row:string): string[]=>{
       return row.split(",")
     })
-    .map((row: string[]): MatchData=>{
-      return [
-        dateStringToDate(row[0]),
-        row[1],
-        row[2],
-        parseInt(row[3]),
-        parseInt(row[4]),
-        row[5] as MatchResult,
-        row[6]
-      ]
-    })
+    .map(this.mapRow)
     }
-
+  
 }
+
+/*
+<T> -> generics. Like func args, but for types in class/func definitions
+Allow us to define the type of a prop/arg/return val at a future point
+Used heavily i when writing reusable code.
+<T> in child class can be <number>, <string>, <{location:{lat: number}}>, <MyCustomType> etc
+*/
